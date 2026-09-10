@@ -26,13 +26,11 @@ function renderTopbar() {
   bar.innerHTML = `
     <div class="ticker-bar">
       <div class="ticker-track">
-        <span>🔔 Matrículas abertas — Robótica com Propósito</span>
-        <span>🤖 Turmas de <b>Arduino</b> e <b>LEGO</b> — 10 aulas cada</span>
-        <span>📖 Toda aula começa com um estudo bíblico</span>
+        <span>✨ Em breve — Robótica com Propósito</span>
+        <span><img src="assets/logo.jpg" alt="" class="ticker-logo"> Turmas de <b>Arduino</b> e <b>LEGO</b> — 10 aulas cada</span>
         <span>✨ Novo projeto em breve: <b>Esporte para Todos</b></span>
-        <span>🔔 Matrículas abertas — Robótica com Propósito</span>
-        <span>🤖 Turmas de <b>Arduino</b> e <b>LEGO</b> — 10 aulas cada</span>
-        <span>📖 Toda aula começa com um estudo bíblico</span>
+        <span>✨ Em breve — Robótica com Propósito</span>
+        <span><img src="assets/logo.jpg" alt="" class="ticker-logo"> Turmas de <b>Arduino</b> e <b>LEGO</b> — 10 aulas cada</span>
         <span>✨ Novo projeto em breve: <b>Esporte para Todos</b></span>
       </div>
     </div>
@@ -49,7 +47,7 @@ function renderTopbar() {
               <a href="#/projetos" class="soon">Esporte para Todos (em breve)</a>
             </div>
             <div class="dropdown-cards">
-              <a href="#/robotica"><span class="dc-ico">🤖</span><span class="dc-tag">Em andamento</span><span class="dc-title">Robótica com Propósito</span></a>
+              <a href="#/robotica"><span class="dc-ico">🤖</span><span class="dc-tag">Em breve</span><span class="dc-title">Robótica com Propósito</span></a>
               <a href="#/projetos"><span class="dc-ico">⚽</span><span class="dc-tag">Em breve</span><span class="dc-title">Esporte para Todos</span></a>
             </div>
           </div>
@@ -86,12 +84,15 @@ function renderTopbar() {
 }
 
 function highlightNav(){
-  let path = location.hash.split("/")[1] || "";
+  let rawPath = location.hash.split("/")[1] || "";
+  let path = rawPath;
   if (path === "robotica" || path === "curso" || path === "aula" || path === "projetos") path = "projetos";
   document.querySelectorAll("#mainNav > a").forEach(a=>{
     const target = a.getAttribute("href").replace("#/","");
     a.classList.toggle("active", target === path);
   });
+  const brand = document.querySelector(".brand-center");
+  if (brand) brand.style.display = rawPath === "" ? "none" : "flex";
 }
 
 function renderAccessSlot() {
@@ -120,7 +121,7 @@ function renderAccessSlot() {
   } else {
     const wrap = el(`
       <div class="access-wrap">
-        <button class="btn-access" id="accessBtn"><span class="ava">👤</span> Acesso <span style="font-size:.7em">▾</span></button>
+        <button class="btn-access" id="accessBtn"><span class="ava">👤</span></button>
         <div class="access-menu" id="accessMenu" hidden>
           <p>Entrar como</p>
           <button class="access-option" data-role="administrador"><span class="ico">🛡️</span> Administrador</button>
@@ -161,8 +162,8 @@ async function startLogin(role) {
 function viewHome() {
   return `
     <section class="hero">
+      <img src="assets/banners/banner-home-web.jpg" alt="Equipe Conecta AI — estamos trabalhando nas nuvens com Cristo" class="hero-banner">
       <div class="container">
-        <img src="assets/banners/banner-home-web.jpg" alt="Equipe Conecta AI — estamos trabalhando nas nuvens com Cristo" class="hero-banner">
         <span class="eyebrow">⚡ Atos 1:8 — versículo-base do Conecta AI</span>
         <h1>Conectando jovens a Cristo<br>e ao mundo digital</h1>
         <p class="lead">O Conecta AI é uma ação missionária que une evangelização, discipulado e capacitação
@@ -224,7 +225,7 @@ function viewHome() {
         </div>
         <div class="grid grid-2">
           <div class="card project-card">
-            <span class="status-tag live">Em andamento</span>
+            <span class="status-tag soon">Em breve</span>
             <div class="project-cover"><img src="assets/banners/robotica-badge-web.jpg" alt="Banner Robótica AI Conecta"></div>
             <h3>Robótica com Propósito</h3>
             <p>Duas turmas — Arduino e LEGO — com 10 aulas cada, sempre começando com um pequeno estudo da
@@ -358,7 +359,7 @@ function viewProjetos() {
         </div>
         <div class="grid grid-2">
           <div class="card project-card">
-            <span class="status-tag live">Em andamento</span>
+            <span class="status-tag soon">Em breve</span>
             <div class="project-cover"><img src="assets/banners/robotica-badge-web.jpg" alt="Banner Robótica AI Conecta"></div>
             <h3>Robótica com Propósito</h3>
             <p>Duas turmas — Robótica com Arduino e Robótica com LEGO — com 10 aulas cada. Toda aula começa

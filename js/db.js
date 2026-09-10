@@ -111,7 +111,11 @@ const DB = (() => {
       localStorage.setItem("ca_current_user", id);
       return profile;
     } else {
-      return supabase.auth.signInWithOAuth({ provider: "google" });
+      const basePath = window.location.origin + window.location.pathname.replace(/[^/]*$/, "");
+      return supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: basePath }
+      });
     }
   }
 
