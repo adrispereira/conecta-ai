@@ -162,14 +162,19 @@ p{line-height:1.65;color:var(--ink-muted);}
 }
 
 /* ---------- hero ---------- */
-.hero{padding:86px 0 60px;text-align:center;}
+.hero{padding:0 0 60px;text-align:center;}
 .hero-logo{
   width:88px;height:88px;border-radius:20px;margin:0 auto 24px;
   box-shadow:0 0 32px var(--cyan-glow);border:1px solid rgba(79,216,255,.3);
 }
-.hero-banner{
-  display:block;width:100vw;max-width:100vw;height:auto;margin:0 0 36px calc(50% - 50vw);
+.hero-banner-wrap{
+  display:block;
+  width:100vw;max-width:100vw;margin:0 0 28px calc(50% - 50vw);
+  background:var(--navy-950);
   border-bottom:1px solid rgba(79,216,255,.3);box-shadow:0 8px 40px rgba(0,8,40,.5);
+}
+.hero-banner{
+  display:block;width:100%;height:auto;
 }
 
 /* ---------- selo/botão redondo de projeto ---------- */
@@ -188,9 +193,10 @@ p{line-height:1.65;color:var(--ink-muted);}
 .project-cover{overflow:hidden;padding:0 !important;}
 .project-cover img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit;}
 .hero .eyebrow{
-  display:inline-flex;gap:8px;align-items:center;color:var(--cyan-300);font-weight:700;
-  letter-spacing:1px;font-size:.8rem;text-transform:uppercase;margin-bottom:18px;
-  border:1px solid rgba(79,216,255,.35);padding:6px 14px;border-radius:999px;
+  display:flex;gap:8px;align-items:center;justify-content:center;color:var(--cyan-300);font-weight:600;
+  font-style:italic;letter-spacing:.2px;font-size:.92rem;line-height:1.45;margin:20px auto 18px;
+  border:1px solid rgba(79,216,255,.35);padding:12px 20px;border-radius:16px;
+  max-width:640px;text-align:center;
 }
 .hero h1{font-size:clamp(2rem,5vw,3.4rem);background:linear-gradient(135deg,var(--white),var(--cyan-300));-webkit-background-clip:text;background-clip:text;color:transparent;}
 .hero p.lead{max-width:680px;margin:0 auto 28px;font-size:1.08rem;}
