@@ -162,9 +162,11 @@ async function startLogin(role) {
 function viewHome() {
   return `
     <section class="hero">
-      <img src="assets/banners/banner-home-web.jpg" alt="Equipe Conecta AI — estamos trabalhando nas nuvens com Cristo" class="hero-banner">
+      <div class="hero-banner-wrap">
+        <img src="assets/banners/banner-home-web.jpg" alt="Equipe Conecta AI — estamos trabalhando nas nuvens com Cristo" class="hero-banner">
+      </div>
       <div class="container">
-        <span class="eyebrow">⚡ Atos 1:8 — versículo-base do Conecta AI</span>
+        <span class="eyebrow">⚡ "Mas recebereis poder ao descer sobre vós o Espírito Santo, e ser-me-eis testemunhas, tanto em Jerusalém como em toda a Judeia e Samaria, e até aos confins da terra." — Atos 1:8</span>
         <h1>Conectando jovens a Cristo<br>e ao mundo digital</h1>
         <p class="lead">O Conecta AI é uma ação missionária que une evangelização, discipulado e capacitação
         digital para alcançar adolescentes e jovens em situação de vulnerabilidade social e espiritual —
