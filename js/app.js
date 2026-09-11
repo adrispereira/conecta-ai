@@ -55,7 +55,7 @@ function renderTopbar() {
         <a href="#/historia">Nossa História</a>
         <a href="#/sobre">Sobre nós</a>
       </nav>
-      <a href="#/robotica" class="btn-cta-pill">Solicitar Matrícula</a>
+      <a href="#/matricula-monitores" class="btn-cta-pill btn-pulse">Matrícula para Monitores</a>
       <a href="#/" class="brand-center">
         <img src="assets/logo.jpg" alt="Logo Conecta AI">
         <span class="word">CONECTA<b>AI</b></span>
@@ -419,6 +419,76 @@ function viewSobre() {
 }
 
 // ---------------------------------------------------------------
+// TELA: Formulário — Matrícula para Monitores
+// ---------------------------------------------------------------
+function viewMatriculaMonitores() {
+  return `
+    <section class="section" style="padding-top:70px">
+      <div class="container" style="max-width:640px">
+        <a href="#/" style="color:var(--cyan-300);font-size:.85rem">← Voltar para a página inicial</a>
+        <div class="section-head" style="margin-top:18px;text-align:center">
+          <span class="tag">Faça parte da equipe</span>
+          <h1>Você gostaria de ser um monitor dos nossos cursos?</h1>
+          <p>Preencha o formulário a seguir com os seus dados!</p>
+        </div>
+        <form id="monitorForm" class="monitor-form">
+          <label>Nome completo
+            <input type="text" name="nome" required placeholder="Seu nome completo">
+          </label>
+          <label>Data de nascimento
+            <input type="date" name="nascimento" required>
+          </label>
+          <label>CPF
+            <input type="text" name="cpf" required placeholder="000.000.000-00" maxlength="14">
+          </label>
+          <label>Endereço
+            <input type="text" name="endereco" required placeholder="Rua, número, bairro, cidade">
+          </label>
+          <label>Telefone
+            <input type="tel" name="telefone" required placeholder="(00) 00000-0000">
+          </label>
+          <label>E-mail
+            <input type="email" name="email" required placeholder="seu@email.com">
+          </label>
+          <div class="monitor-form-footer">
+            <button type="submit" class="btn btn-primary">Envie Aqui</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  `;
+}
+
+function initMatriculaMonitoresForm() {
+  const form = document.getElementById("monitorForm");
+  if (!form) return;
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const nome = (f.get("nome") || "").trim();
+    const nascimento = (f.get("nascimento") || "").trim();
+    const cpf = (f.get("cpf") || "").trim();
+    const endereco = (f.get("endereco") || "").trim();
+    const telefone = (f.get("telefone") || "").trim();
+    const email = (f.get("email") || "").trim();
+
+    const assunto = "Inscrição para Monitor — Conecta AI";
+    const corpo =
+      "Nova inscrição para ser monitor dos cursos do Conecta AI:\n\n" +
+      `Nome completo: ${nome}\n` +
+      `Data de nascimento: ${nascimento}\n` +
+      `CPF: ${cpf}\n` +
+      `Endereço: ${endereco}\n` +
+      `Telefone: ${telefone}\n` +
+      `E-mail: ${email}\n`;
+
+    const mailto = `mailto:adriana.pereira@ufsm.br?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+    window.location.href = mailto;
+    toast("Abrindo seu aplicativo de e-mail para enviar a inscrição…");
+  });
+}
+
+// ---------------------------------------------------------------
 // TELA: Robótica com Propósito (lista de cursos)
 // ---------------------------------------------------------------
 async function viewRobotica() {
@@ -772,6 +842,7 @@ async function renderRoute() {
   else if (route === "sobre") html = viewSobre();
   else if (route === "historia") html = viewHistoria();
   else if (route === "projetos") html = viewProjetos();
+  else if (route === "matricula-monitores") html = viewMatriculaMonitores();
   else if (route === "robotica") html = await viewRobotica();
   else if (route === "curso") html = await viewCurso(param);
   else if (route === "aula") html = await viewAula(param);
@@ -785,6 +856,7 @@ async function renderRoute() {
       ${DB.DEMO_MODE ? "⚠️ Site em modo demonstração (dados salvos apenas neste navegador)." : ""}
     </div></footer>`;
   highlightNav();
+  initMatriculaMonitoresForm();
   window.scrollTo(0, 0);
 }
 
