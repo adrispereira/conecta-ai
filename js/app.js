@@ -413,8 +413,63 @@ function viewSobre() {
           <span>Alcançar</span><span class="arrow">→</span><span>Conquistar</span><span class="arrow">→</span>
           <span>Discipular</span><span class="arrow">→</span><span>Treinar</span><span class="arrow">→</span><span>Enviar</span>
         </div>
+
+        <h3 style="margin-top:44px">Quem Somos</h3>
+        <p>Conheça as pessoas que fazem o Conecta AI acontecer.</p>
+
+        <div class="team-group">
+          <span class="team-group-label">Coordenação do projeto</span>
+          <div class="team-grid">
+            ${teamCard("Claudio Ziller", "Coordenador Geral do Conecta AI", "assets/team/coordenador-claudio-ziller.jpg")}
+          </div>
+        </div>
+
+        <div class="team-group">
+          <span class="team-group-label">Colaboradores</span>
+          <div class="team-grid">
+            ${teamCard("Pastor Maurício Junior", "Colaborador — Conecta AI", "assets/team/mauricio-junior.jpg")}
+            ${teamCard("Lina Salles", "Colaboradora — Conecta AI", "assets/team/lina-salles.jpg")}
+            ${teamCard("Pastor Abrahão", "Colaborador — Conecta AI", "assets/team/abrahao.jpg")}
+            ${teamCard("Pastor Zinaldo", "Colaborador — Conecta AI", "assets/team/zinaldo.jpg")}
+            ${teamCard("Edu Lima", "Colaborador — Conecta AI", "assets/team/edu-lima.jpg")}
+          </div>
+        </div>
+
+        <div class="team-group">
+          <span class="team-group-label">Coordenação dos cursos</span>
+          <div class="team-grid">
+            ${teamCard("Adriana Pereira", "Coordenadora de Curso", "assets/team/adriana-pereira.jpg")}
+            ${teamCard("Atilei Zoaquim", "Coordenador de Curso", "assets/team/atilei-zoaquim.png")}
+          </div>
+        </div>
       </div>
     </section>
+  `;
+}
+
+function initialsAvatar(nome) {
+  const iniciais = nome.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#123a63"/><stop offset="1" stop-color="#0a1830"/>
+      </linearGradient>
+    </defs>
+    <rect width="140" height="140" fill="url(#g)"/>
+    <text x="50%" y="53%" text-anchor="middle" dominant-baseline="middle"
+      font-family="Sora, Segoe UI, sans-serif" font-size="52" font-weight="800" fill="#7fe3ff">${iniciais}</text>
+  </svg>`;
+  return "data:image/svg+xml;base64," + btoa(svg);
+}
+
+function teamCard(nome, cargo, foto) {
+  const src = foto || initialsAvatar(nome);
+  return `
+    <div class="team-card">
+      <img src="${src}" alt="Foto de ${esc(nome)}">
+      <span class="team-name">${esc(nome)}</span>
+      <span class="team-role">${esc(cargo)}</span>
+    </div>
   `;
 }
 
