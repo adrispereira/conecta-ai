@@ -439,7 +439,7 @@ function viewSobre() {
           <span class="team-group-label">Coordenação dos cursos</span>
           <div class="team-grid">
             ${teamCard("Adriana Pereira", "Coordenadora de Curso", "assets/team/adriana-pereira.jpg")}
-            ${teamCard("Atilei Zoaquim", "Coordenador de Curso", "assets/team/atilei-zoaquim.png")}
+            ${teamCard("Atilei Joaquim", "Coordenador de Curso", "assets/team/atilei-zoaquim.png")}
           </div>
         </div>
       </div>
