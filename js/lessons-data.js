@@ -15,9 +15,10 @@ const LESSON_DETAILS = {
       "Instalação e reconhecimento do Arduino IDE.",
       "Primeiro programa: o exemplo \"Blink\" (piscar o LED embutido na placa)."
     ],
-    "exercicio": "Preencha a ficha \"Meu propósito neste curso\": o que você espera aprender e por quê?",
+    "exercicio": "Assim como todo projeto começa com uma ideia antes da primeira peça ser encaixada, você foi pensado e criado por Deus com um propósito, antes mesmo de nascer. O que você espera descobrir sobre esse propósito nas próximas aulas?",
     "pdf_professor": "materiais/arduino-aula01-professor.pdf",
-    "pdf_aluno": "materiais/arduino-aula01-apostila-aluno.pdf"
+    "pdf_aluno": "materiais/arduino-aula01-apostila-aluno.pdf",
+    "video_url": "assets/aula1/video.mp4"
   },
   {
     "numero": 2,

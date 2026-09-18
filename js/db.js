@@ -223,10 +223,68 @@ const DB = (() => {
     return supabase.from("enrollments").update({ status, respondido_em: new Date().toISOString() }).eq("id", enrollmentId);
   }
 
+  // ---------------------------------------------------------------
+  // PROGRESSO NA TRILHA (lesson_progress) + FICHA "MEU PROPÓSITO"
+  // Reaproveita a tabela lesson_progress já existente no schema:
+  // concluido_em marca a estação como concluída na trilha, e o texto
+  // da ficha pessoal do aluno fica em exercicio_respondido (jsonb),
+  // no formato { meu_proposito: "..." }.
+  // ---------------------------------------------------------------
+  async function getProgressMap(enrollmentId) {
+    if (!enrollmentId) return {};
+    if (DEMO_MODE) {
+      seedIfEmpty();
+      const list = read("ca_progress").filter(p => p.enrollment_id === enrollmentId);
+      const map = {};
+      list.forEach(p => map[p.lesson_id] = p);
+      return map;
+    }
+    const { data } = await supabase.from("lesson_progress").select("*").eq("enrollment_id", enrollmentId);
+    const map = {};
+    (data || []).forEach(p => map[p.lesson_id] = p);
+    return map;
+  }
+
+  async function getProgress(enrollmentId, lessonId) {
+    const map = await getProgressMap(enrollmentId);
+    return map[lessonId] || null;
+  }
+
+  function upsertProgressDemo(enrollmentId, lessonId, fields) {
+    const list = read("ca_progress");
+    let row = list.find(p => p.enrollment_id === enrollmentId && p.lesson_id === lessonId);
+    if (!row) {
+      row = { id: uid(), enrollment_id: enrollmentId, lesson_id: lessonId };
+      list.push(row);
+    }
+    Object.assign(row, fields);
+    write("ca_progress", list);
+    return row;
+  }
+
+  async function saveFicha(enrollmentId, lessonId, texto) {
+    const fields = { exercicio_respondido: { meu_proposito: texto } };
+    if (DEMO_MODE) { seedIfEmpty(); return upsertProgressDemo(enrollmentId, lessonId, fields); }
+    const { data } = await supabase.from("lesson_progress")
+      .upsert({ enrollment_id: enrollmentId, lesson_id: lessonId, ...fields }, { onConflict: "enrollment_id,lesson_id" })
+      .select().single();
+    return data;
+  }
+
+  async function markLessonComplete(enrollmentId, lessonId) {
+    const fields = { status: "presente", concluido_em: new Date().toISOString() };
+    if (DEMO_MODE) { seedIfEmpty(); return upsertProgressDemo(enrollmentId, lessonId, fields); }
+    const { data } = await supabase.from("lesson_progress")
+      .upsert({ enrollment_id: enrollmentId, lesson_id: lessonId, ...fields }, { onConflict: "enrollment_id,lesson_id" })
+      .select().single();
+    return data;
+  }
+
   return {
     DEMO_MODE, supabase,
     signInWithGoogle, signOut, getCurrentUser, updateProfile, getProfileSync,
     getCourses, getCourse, getLessons, getLesson,
     getMyEnrollment, requestEnrollment, listEnrollments, updateEnrollmentStatus,
+    getProgressMap, getProgress, saveFicha, markLessonComplete,
   };
 })();

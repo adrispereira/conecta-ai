@@ -593,19 +593,25 @@ async function viewCurso(slug) {
   if (currentUser) enrollment = await DB.getMyEnrollment(currentUser.id, course.id);
   const aprovado = enrollment && enrollment.status === "aprovada";
 
-  const lessonRows = lessons.map(l => {
-    const unlocked = aprovado && (l.material_disponivel || l.numero === 1) ;
-    return `
-      <div class="lesson-row ${unlocked ? "unlocked" : "locked"}">
-        <div class="lesson-num">${l.numero}</div>
-        <div class="info">
-          <strong>${esc(l.titulo)}</strong><br>
-          <small>📖 ${esc(l.versiculo_referencia || "")}</small>
-        </div>
-        <div class="lock-badge">${unlocked ? "🔓 Liberada" : (aprovado ? "🔒 Em preparação" : "🔒 Matricule-se")}</div>
-        <button class="go" ${unlocked ? "" : "disabled"} data-lesson="${l.id}">Acessar</button>
-      </div>`;
-  }).join("");
+  let mainContent;
+  if (aprovado) {
+    const progressMap = await DB.getProgressMap(enrollment.id);
+    mainContent = renderTrilha(lessons, progressMap);
+  } else {
+    const lessonRows = lessons.map(l => {
+      return `
+        <div class="lesson-row locked">
+          <div class="lesson-num">${l.numero}</div>
+          <div class="info">
+            <strong>${esc(l.titulo)}</strong><br>
+            <small>📖 ${esc(l.versiculo_referencia || "")}</small>
+          </div>
+          <div class="lock-badge">🔒 Matricule-se</div>
+          <button class="go" disabled data-lesson="${l.id}">Acessar</button>
+        </div>`;
+    }).join("");
+    mainContent = `<h3>Roteiro das 10 aulas</h3><div class="lesson-list">${lessonRows}</div>`;
+  }
 
   let enrollBox = "";
   if (!currentUser) {
@@ -632,9 +638,11 @@ async function viewCurso(slug) {
       toast("Solicitação de matrícula enviada!");
       renderRoute();
     });
-    document.querySelectorAll("[data-lesson]").forEach(b => {
-      b.addEventListener("click", () => { if (!b.disabled) navigate(`#/aula/${b.dataset.lesson}`); });
-    });
+    if (!aprovado) {
+      document.querySelectorAll("[data-lesson]").forEach(b => {
+        b.addEventListener("click", () => { if (!b.disabled) navigate(`#/aula/${b.dataset.lesson}`); });
+      });
+    }
   });
 
   return `
@@ -651,15 +659,95 @@ async function viewCurso(slug) {
             <span class="meta-pill">📖 ${esc(course.versiculo_base)}</span>
           </div>
         </div>
+        ${aprovado ? mainContent : `
         <div class="grid" style="grid-template-columns:2fr 1fr;gap:26px;align-items:start">
-          <div>
-            <h3>Roteiro das 10 aulas</h3>
-            <div class="lesson-list">${lessonRows}</div>
-          </div>
+          <div>${mainContent}</div>
           <div>${enrollBox}</div>
-        </div>
+        </div>`}
       </div>
     </section>
+  `;
+}
+
+// ---------------------------------------------------------------
+// TRILHA: mapa de aventura com o progresso do aluno
+// ---------------------------------------------------------------
+function renderTrilha(lessons, progressMap) {
+  const stations = lessons.map(l => {
+    const unlocked = l.material_disponivel || l.numero === 1;
+    const done = !!(progressMap[l.id] && progressMap[l.id].concluido_em);
+    return { lesson: l, unlocked, done };
+  });
+
+  let todayFound = false;
+  stations.forEach(s => {
+    if (s.unlocked && !s.done && !todayFound) { s.today = true; todayFound = true; }
+  });
+
+  const doneCount = stations.filter(s => s.done).length;
+  const total = stations.length;
+  const pct = total ? Math.round((doneCount / total) * 100) : 0;
+  const goalUnlocked = total > 0 && doneCount === total;
+
+  const speech = doneCount === 0
+    ? "Vamos começar essa aventura juntos? Toque na primeira estação da trilha!"
+    : goalUnlocked
+      ? "Uau, você completou toda a trilha! Parabéns pela jornada!"
+      : todayFound
+        ? "Continue sua jornada! Sua próxima estação já está te esperando."
+        : "Você completou tudo o que já foi liberado. Aguarde a próxima estação!";
+
+  const stationsHtml = stations.map((s, i) => {
+    const { lesson: l, unlocked, done, today } = s;
+    const stateClass = done ? "done" : today ? "today" : "locked";
+    const icon = done
+      ? `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#04121f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="5,13 10,18 19,7"></polyline></svg>`
+      : today
+        ? `<span class="node-number">${l.numero}</span>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7f93c2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>`;
+    const subtitle = esc(l.versiculo_referencia || "");
+    return `
+      <div class="station ${stateClass} ${i % 2 === 1 ? "right" : ""}" data-lesson="${l.id}" ${unlocked ? "" : 'data-locked="1"'}>
+        <div class="node-circle">
+          ${icon}
+          ${today ? '<img class="node-cone" src="assets/cone/cone-mascote.jpg" alt="Coné">' : ""}
+        </div>
+        <div class="station-label">
+          <div class="station-num">Aula ${l.numero}${today ? '<span class="hoje-pill">HOJE</span>' : ""}</div>
+          <strong>${esc(l.titulo)}</strong>
+          ${subtitle ? `<small>📖 ${subtitle}</small>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+
+  setTimeout(() => {
+    document.querySelectorAll(".trilha-path .station").forEach(el => {
+      el.addEventListener("click", () => {
+        if (el.dataset.locked) return;
+        navigate(`#/aula/${el.dataset.lesson}`);
+      });
+    });
+  });
+
+  return `
+    <div class="trilha-wrap">
+      <div class="cone-banner">
+        <img src="assets/cone/cone-mascote.jpg" alt="Coné" class="cone-avatar">
+        <div class="speech-bubble">${esc(speech)}</div>
+      </div>
+      <div class="trilha-progressbar">
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <span>${doneCount} de ${total} aulas concluídas</span>
+      </div>
+      <div class="trilha-path">${stationsHtml}</div>
+      <div class="goal-card ${goalUnlocked ? "unlocked" : ""}">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${goalUnlocked ? "#0c1b4a" : "#7f93c2"}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M7 6H4a3 3 0 0 0 3 3"></path><path d="M17 6h3a3 3 0 0 1-3 3"></path></svg>
+        <div>
+          <strong>${goalUnlocked ? "Trilha concluída! 🎉" : "Certificado de conclusão"}</strong>
+          <p>${goalUnlocked ? "Você concluiu todas as estações desta trilha." : "Complete todas as estações liberadas para desbloquear seu certificado."}</p>
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -672,23 +760,35 @@ async function viewAula(lessonId) {
   const course = await DB.getCourse(lesson.course_id);
 
   if (!currentUser) return `<div class="container section"><p>Faça login para acessar esta aula.</p></div>`;
-  if (currentUser.role === "aluno") {
-    const enrollment = await DB.getMyEnrollment(currentUser.id, course.id);
+
+  const isAluno = currentUser.role === "aluno";
+  let enrollment = null;
+  let progress = null;
+  if (isAluno) {
+    enrollment = await DB.getMyEnrollment(currentUser.id, course.id);
     if (!enrollment || enrollment.status !== "aprovada") {
       return `<div class="container section"><div class="card"><h3>Acesso bloqueado</h3><p>Você precisa estar com a matrícula aprovada em <strong>${esc(course.titulo)}</strong> para acessar esta aula.</p><a class="btn btn-primary" href="#/curso/${course.slug}">Ver status da matrícula</a></div></div>`;
     }
+    progress = await DB.getProgress(enrollment.id, lesson.id);
   }
+
+  setTimeout(() => {
+    if (isAluno && enrollment) bindAulaEvents(enrollment, lesson);
+  });
 
   return `
     <section class="section" style="padding-top:70px">
       <div class="container" style="max-width:820px">
         <a href="#/curso/${course.slug}" style="color:var(--cyan-300);font-size:.85rem">← Voltar para ${esc(course.titulo)}</a>
-        <div class="lesson-header" style="margin-top:18px">
-          <span class="tag" style="color:var(--gold-500)">Aula ${lesson.numero} de 10 — ${esc(course.titulo)}</span>
-          <h1>${esc(lesson.titulo)}</h1>
+        <div class="lesson-header" style="margin-top:18px;display:flex;align-items:center;gap:14px">
+          <img src="assets/cone/cone-mascote.jpg" alt="Coné" class="cone-avatar-sm">
+          <div>
+            <span class="tag" style="color:var(--gold-500)">Aula ${lesson.numero} de 10 — ${esc(course.titulo)}</span>
+            <h1 style="margin:2px 0 0">${esc(lesson.titulo)}</h1>
+          </div>
         </div>
 
-        ${renderLessonContent(course.id, lesson.numero)}
+        ${renderLessonContent(course.id, lesson.numero, { progress, showFicha: isAluno })}
 
         <div class="step-nav">
           <a class="btn btn-ghost" href="#/curso/${course.slug}">← Voltar ao roteiro do curso</a>
@@ -698,7 +798,25 @@ async function viewAula(lessonId) {
   `;
 }
 
-function renderLessonContent(courseId, numero) {
+function bindAulaEvents(enrollment, lesson) {
+  document.getElementById("btnSalvarFicha")?.addEventListener("click", async () => {
+    const campo = document.getElementById("fichaTexto");
+    const texto = (campo?.value || "").trim();
+    if (!texto) { toast("Escreva sua reflexão antes de salvar."); return; }
+    await DB.saveFicha(enrollment.id, lesson.id, texto);
+    const status = document.getElementById("fichaStatus");
+    if (status) status.textContent = "Reflexão salva! ✓";
+    toast("Reflexão salva!");
+  });
+  document.getElementById("btnConcluirAula")?.addEventListener("click", async () => {
+    await DB.markLessonComplete(enrollment.id, lesson.id);
+    toast("Aula concluída! Sua trilha foi atualizada.");
+    renderRoute();
+  });
+}
+
+function renderLessonContent(courseId, numero, opts = {}) {
+  const { progress, showFicha } = opts;
   const details = (LESSON_DETAILS[courseId] || []).find(l => l.numero === numero);
   if (!details) {
     return `
@@ -708,6 +826,37 @@ function renderLessonContent(courseId, numero) {
         pedagógica do Conecta AI.</p>
       </div>`;
   }
+
+  const concluded = !!(progress && progress.concluido_em);
+  const fichaTexto = (progress && progress.exercicio_respondido && progress.exercicio_respondido.meu_proposito) || "";
+
+  const videoBlock = details.video_url ? `
+    <div class="lesson-block">
+      <h3>🎬 Vídeo da aula com o Coné</h3>
+      <div class="video-wrap"><video controls preload="metadata" src="${details.video_url}"></video></div>
+    </div>` : "";
+
+  const fichaBlock = showFicha ? `
+    <div class="lesson-block ficha-block">
+      <div class="ficha-privacy">🔒 Só você e a equipe do Conecta AI podem ver esta reflexão.</div>
+      <h3>📝 Minha ficha: Meu propósito</h3>
+      <p>${esc(details.exercicio)}</p>
+      <div class="field"><textarea id="fichaTexto" placeholder="Escreva sua reflexão aqui...">${esc(fichaTexto)}</textarea></div>
+      <button class="btn btn-primary" id="btnSalvarFicha">Salvar minha reflexão</button>
+      <span id="fichaStatus" class="ficha-status"></span>
+    </div>` : `
+    <div class="lesson-block">
+      <h3>✏️ Exercício da aula</h3>
+      <p>${esc(details.exercicio)}</p>
+    </div>`;
+
+  const concluirBlock = showFicha ? `
+    <div class="lesson-block concluir-block">
+      ${concluded
+        ? `<div class="concluido-msg">✅ Aula concluída! Continue sua trilha.</div>`
+        : `<button class="btn btn-primary" id="btnConcluirAula">Marcar aula como concluída</button>`}
+    </div>` : "";
+
   return `
     <div class="lesson-block">
       <h3>📖 Estudo bíblico</h3>
@@ -720,17 +869,15 @@ function renderLessonContent(courseId, numero) {
       <p>${esc(details.objetivo)}</p>
     </div>
 
+    ${videoBlock}
+
     <div class="lesson-block">
       <h3>🔧 Conteúdo técnico</h3>
       <ul>${details.tecnico.map(t => `<li>${esc(t)}</li>`).join("")}</ul>
     </div>
 
-    <div class="lesson-block">
-      <h3>✏️ Exercício da aula</h3>
-      <p>${esc(details.exercicio)}</p>
-      <div class="field"><textarea placeholder="Escreva sua resposta aqui..."></textarea></div>
-      <button class="btn btn-primary">Salvar resposta</button>
-    </div>
+    ${fichaBlock}
+    ${concluirBlock}
 
     <div class="lesson-block">
       <h3>📎 Materiais para download</h3>
